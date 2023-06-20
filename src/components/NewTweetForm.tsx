@@ -2,6 +2,7 @@ import { useSession } from "next-auth/react";
 import Button from "./Button";
 import { ProfileImage } from "./ProfileImage";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { api } from "~/utils/api";
 
 function updateTextAreaSize(textArea?: HTMLTextAreaElement) {
   if (textArea == null) return;
@@ -9,7 +10,10 @@ function updateTextAreaSize(textArea?: HTMLTextAreaElement) {
   textArea.style.height = `${textArea.scrollHeight}px`;
 }
 
-export default function NewTweetForm() {
+//Develop this connection
+api.spit.create.useMutation();
+
+function Form() {
   const session = useSession();
   const [inputValue, setInputValue] = useState<string>("");
   const textAreaRef = useRef<HTMLTextAreaElement>();
@@ -40,4 +44,11 @@ export default function NewTweetForm() {
       <Button className="self-end">Spit</Button>
     </form>
   );
+}
+
+export default function NewTweetForm() {
+  const session = useSession();
+  if (session.status !== "authenticated") return;
+
+  return <Form />;
 }
