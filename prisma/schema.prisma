@@ -21,6 +21,7 @@ model Spit {
     user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
     likes Like[]
 
+    @@unique([creationTime, id])
     @@index([userId])
 }
 
