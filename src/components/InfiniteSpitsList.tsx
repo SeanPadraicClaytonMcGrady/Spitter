@@ -1,4 +1,8 @@
+import Link from "next/link";
 import InfiniteScroll from "react-infinite-scroll-component";
+import { ProfileImage } from "./ProfileImage";
+import { useSession } from "next-auth/react";
+import { VscHeartFilled, VscHeart } from "react-icons/vsc";
 
 type Spit = {
   id: string;
@@ -12,7 +16,7 @@ type Spit = {
 type InfiniteSpitListProps = {
   isLoading: boolean;
   isError: boolean;
-  hasMore?: boolean;
+  hasMore: boolean;
   fetchNewSpits: () => Promise<unknown>;
   spits?: Spit[];
 };
@@ -43,9 +47,71 @@ export function InfiniteSpitList({
         loader={"Loading..."}
       >
         {spits.map((spit) => {
-          return <div key={spit.id}>{spit.content}</div>;
+          return <SpitCard key={spit.id} {...spit} />;
         })}
       </InfiniteScroll>
     </ul>
+  );
+}
+
+const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
+  dateStyle: "short",
+});
+
+function SpitCard({
+  id,
+  user,
+  content,
+  creationTime,
+  likeCount,
+  likedByMe,
+}: Spit) {
+  return (
+    <li className="flex gap-4 border-b px-4 py-4">
+      <Link href={`/profiles/${user.id}`}>
+        <ProfileImage src={user.image} />
+      </Link>
+      <div className="flex flex-grow flex-col">
+        <div className="flex gap-1">
+          <Link
+            href={`/profiles/${user.id}`}
+            className="font-bold outline-none hover:underline focus-visible:underline"
+          >
+            {user.name}
+          </Link>
+          <span className="text-gray-500">-</span>
+          <span className="text-gray-500">
+            {dateTimeFormatter.format(creationTime)}
+          </span>
+        </div>
+        <p className="whitespace-pre-wrap">{content}</p>
+        <HeartButton likedByMe={likedByMe} likeCount={likeCount} />
+      </div>
+    </li>
+  );
+}
+
+type HeartButtonProps = {
+  likedByMe: boolean;
+  likeCount: number;
+};
+
+function HeartButton({ likedByMe, likeCount }: HeartButtonProps) {
+  const session = useSession();
+  const HeartIcon = likedByMe ? VscHeartFilled : VscHeart;
+
+  if (session.status !== "authenticated") {
+    return (
+      <div className="mb-1 mt-1 flex items-center gap-3 self-start text-gray-500">
+        <HeartIcon />
+        <span>{likeCount}</span>
+      </div>
+    );
+  }
+  return (
+    <div className="mb-1 mt-1 flex items-center gap-3 self-start text-gray-500">
+      <HeartIcon />
+      <span>{likeCount}</span>
+    </div>
   );
 }
