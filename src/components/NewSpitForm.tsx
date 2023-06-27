@@ -24,6 +24,7 @@ function Form() {
     updateTextAreaSize(textArea);
     textAreaRef.current = textArea;
   }, []);
+  const trpcUtils = api.useContext();
 
   useLayoutEffect(() => {
     updateTextAreaSize(textAreaRef.current);
@@ -31,8 +32,37 @@ function Form() {
 
   const createSpit = api.spit.create.useMutation({
     onSuccess: (newSpit) => {
-      console.log(newSpit);
       setInputValue("");
+
+      if (session.status !== "authenticated") {
+        return;
+      }
+
+      trpcUtils.spit.infiniteFeed.setInfiniteData({}, (oldData) => {
+        if (oldData == null || oldData.pages[0] == null) return;
+
+        const newCachedSpit = {
+          ...newSpit,
+          likeCount: 0,
+          likedByMe: false,
+          user: {
+            id: session.data.user.id,
+            name: session.data.user.name || null,
+            image: session.data.user.image || null,
+          },
+        };
+
+        return {
+          ...oldData,
+          pages: [
+            {
+              ...oldData.pages[0],
+              spits: [newCachedSpit, ...oldData.pages[0].spits],
+            },
+            ...oldData.pages.slice(1),
+          ],
+        };
+      });
     },
   });
 
@@ -65,7 +95,7 @@ function Form() {
   );
 }
 
-export default function NewTweetForm() {
+export default function NewSpitForm() {
   const session = useSession();
   if (session.status !== "authenticated") return null;
 

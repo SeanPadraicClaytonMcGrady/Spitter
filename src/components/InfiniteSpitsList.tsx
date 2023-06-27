@@ -23,6 +23,7 @@ type InfiniteSpitListProps = {
   spits?: Spit[];
 };
 
+//This is the equivalent of a twitter feed.
 export function InfiniteSpitList({
   spits,
   isError,
@@ -68,7 +69,39 @@ function SpitCard({
   likeCount,
   likedByMe,
 }: Spit) {
-  const toggleLike = api.spit.toggleLike.useMutation();
+  const trpcUtils = api.useContext();
+  const toggleLike = api.spit.toggleLike.useMutation({
+    onSuccess: ({ addedLike }) => {
+      const updateData: Parameters<
+        typeof trpcUtils.spit.infiniteFeed.setInfiniteData
+      >[1] = (oldData) => {
+        if (oldData == null) return;
+
+        const countModifier = addedLike ? 1 : -1;
+
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page) => {
+            return {
+              ...page,
+              spits: page.spits.map((spit) => {
+                if (spit.id === id) {
+                  return {
+                    ...spit,
+                    likeCount: spit.likeCount + countModifier,
+                    likedByMe: addedLike,
+                  };
+                }
+
+                return spit;
+              }),
+            };
+          }),
+        };
+      };
+      trpcUtils.spit.infiniteFeed.setInfiniteData({}, updateData);
+    },
+  });
 
   function handleToggleLike() {
     toggleLike.mutate({ id });
