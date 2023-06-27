@@ -1,8 +1,11 @@
+import { Prisma } from "@prisma/client";
+import { inferAsyncReturnType } from "@trpc/server";
 import { z } from "zod";
 import {
   createTRPCRouter,
   publicProcedure,
   protectedProcedure,
+  createTRPCContext,
 } from "~/server/api/trpc";
 import { Spit } from "~/utils/types";
 
@@ -10,57 +13,29 @@ export const spitRouter = createTRPCRouter({
   infiniteFeed: publicProcedure
     .input(
       z.object({
+        onlyFollowing: z.boolean().optional(),
         limit: z.number().optional(),
         cursor: z.object({ id: z.string(), creationTime: z.date() }).optional(),
       })
     )
-    .query(async ({ input: { limit = 10, cursor }, ctx }) => {
-      const currentUserId = ctx.session?.user.id;
-
-      //This data contains all tweets in order by time & sequence.
-      //They paginate every 10 tweets by default.
-      const data = await ctx.prisma.spit.findMany({
-        take: limit + 1,
-        cursor: cursor ? { creationTime_id: cursor } : undefined,
-        orderBy: [{ creationTime: "desc" }, { id: "desc" }],
-        select: {
-          id: true,
-          content: true,
-          creationTime: true,
-          _count: { select: { likes: true } },
-          likes:
-            currentUserId == null
-              ? false
-              : { where: { userId: currentUserId } },
-          user: {
-            select: { name: true, id: true, image: true },
-          },
-        },
-      });
-
-      let nextCursor: typeof cursor | undefined;
-
-      if (data.length > limit) {
-        const nextItem = data.pop();
-        if (nextItem != null) {
-          nextCursor = { id: nextItem.id, creationTime: nextItem.creationTime };
-        }
+    .query(
+      async ({ input: { limit = 10, onlyFollowing = false, cursor }, ctx }) => {
+        const currentUserId = ctx.session?.user.id;
+        return await getInfiniteSpits({
+          limit,
+          ctx,
+          cursor,
+          whereClause:
+            currentUserId == null || !onlyFollowing
+              ? undefined
+              : {
+                  user: {
+                    followers: { some: { id: currentUserId } },
+                  },
+                },
+        });
       }
-
-      return {
-        spits: data.map((spit) => {
-          return {
-            id: spit.id,
-            content: spit.content,
-            creationTime: spit.creationTime,
-            likeCount: spit._count.likes,
-            user: spit.user,
-            likedByMe: spit.likes?.length > 0,
-          };
-        }),
-        nextCursor,
-      };
-    }),
+    ),
 
   create: protectedProcedure
     .input(z.object({ content: z.string() }))
@@ -89,3 +64,68 @@ export const spitRouter = createTRPCRouter({
       }
     }),
 });
+
+async function getInfiniteSpits({
+  whereClause,
+  ctx,
+  limit,
+  cursor,
+}: {
+  whereClause?: Prisma.SpitWhereInput;
+  limit: number;
+  cursor:
+    | {
+        id: string;
+        creationTime: Date;
+      }
+    | undefined;
+  ctx: inferAsyncReturnType<typeof createTRPCContext>;
+}) {
+  const currentUserId = ctx.session?.user.id;
+
+  //This data contains all tweets in order by time & sequence.
+  //They paginate every 10 tweets by default.
+  const data = await ctx.prisma.spit.findMany({
+    take: limit + 1,
+    cursor: cursor ? { creationTime_id: cursor } : undefined,
+    orderBy: [{ creationTime: "desc" }, { id: "desc" }],
+    where: whereClause,
+    select: {
+      id: true,
+      content: true,
+      creationTime: true,
+      _count: { select: { likes: true } },
+      likes:
+        currentUserId == null ? false : { where: { userId: currentUserId } },
+      user: {
+        select: { name: true, id: true, image: true },
+      },
+    },
+  });
+
+  let nextCursor: typeof cursor | undefined;
+
+  if (data.length > limit) {
+    const nextItem = data.pop();
+    if (nextItem != null) {
+      nextCursor = {
+        id: nextItem.id,
+        creationTime: nextItem.creationTime,
+      };
+    }
+  }
+
+  return {
+    spits: data.map((spit) => {
+      return {
+        id: spit.id,
+        content: spit.content,
+        creationTime: spit.creationTime,
+        likeCount: spit._count.likes,
+        user: spit.user,
+        likedByMe: spit.likes?.length > 0,
+      };
+    }),
+    nextCursor,
+  };
+}
