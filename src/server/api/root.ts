@@ -1,5 +1,6 @@
 import { spitRouter } from "~/server/api/routers/spit";
 import { createTRPCRouter } from "~/server/api/trpc";
+import { profileRouter } from "./routers/profile";
 
 /**
  * This is the primary router for your server.
@@ -8,6 +9,7 @@ import { createTRPCRouter } from "~/server/api/trpc";
  */
 export const appRouter = createTRPCRouter({
   spit: spitRouter,
+  profile: profileRouter,
 });
 
 // export type definition of API

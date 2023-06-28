@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { VscHeartFilled, VscHeart } from "react-icons/vsc";
 import { IconHoverEffect } from "./IconHoverEffect";
 import { api } from "~/utils/api";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 type Spit = {
   id: string;
@@ -31,7 +32,7 @@ export function InfiniteSpitList({
   fetchNewSpits,
   hasMore,
 }: InfiniteSpitListProps) {
-  if (isLoading) return <h1>Loading...</h1>;
+  if (isLoading) return <LoadingSpinner />;
   if (isError) return <h1>Error...</h1>;
   if (spits == null) return null;
 
@@ -47,7 +48,7 @@ export function InfiniteSpitList({
         dataLength={spits.length}
         next={fetchNewSpits}
         hasMore={hasMore}
-        loader={"Loading..."}
+        loader={<LoadingSpinner />}
       >
         {spits.map((spit) => {
           return <SpitCard key={spit.id} {...spit} />;
