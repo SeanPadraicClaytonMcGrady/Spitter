@@ -25,14 +25,16 @@ import { prisma } from "~/server/db";
 
 type CreateContextOptions = {
   session: Session | null;
-  revalidateSSG: (
-    urlPath: string,
-    opts?:
-      | {
-          unstable_onlyGenerated?: boolean | undefined;
-        }
-      | undefined
-  ) => Promise<void> | null;
+  revalidateSSG:
+    | ((
+        urlPath: string,
+        opts?:
+          | {
+              unstable_onlyGenerated?: boolean | undefined;
+            }
+          | undefined
+      ) => Promise<void>)
+    | null;
 };
 
 /**
