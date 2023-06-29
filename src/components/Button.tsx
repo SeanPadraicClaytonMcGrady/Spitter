@@ -1,9 +1,14 @@
-import type { ButtonHTMLAttributes, DetailedHTMLProps } from "react";
+import type {
+  ButtonHTMLAttributes,
+  DetailedHTMLProps,
+  MouseEventHandler,
+} from "react";
 
 type ButtonProps = {
   small?: boolean;
   gray?: boolean;
   className?: string;
+  onClick?: ((event: MouseEventHandler<HTMLButtonElement>) => any) | null;
 } & DetailedHTMLProps<
   ButtonHTMLAttributes<HTMLButtonElement>,
   HTMLButtonElement
