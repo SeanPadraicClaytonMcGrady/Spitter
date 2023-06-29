@@ -1,5 +1,5 @@
 type IconHoverEffectProps = {
-  children: ReactNode;
+  children: any;
   red?: boolean;
 };
 
