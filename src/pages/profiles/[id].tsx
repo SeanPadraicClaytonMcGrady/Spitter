@@ -101,7 +101,7 @@ function FollowButton({
     return null;
   }
   return (
-    <Button disabled={isLoading} onClick={onclick} small gray={isFollowing}>
+    <Button disabled={isLoading} onClick={onClick} small gray={isFollowing}>
       {isFollowing ? "Unfollow" : "Follow"}
     </Button>
   );
