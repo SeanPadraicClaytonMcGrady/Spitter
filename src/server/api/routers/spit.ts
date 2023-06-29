@@ -10,6 +10,23 @@ import {
 import { Spit } from "~/utils/types";
 
 export const spitRouter = createTRPCRouter({
+  infiniteProfileFeed: publicProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        limit: z.number().optional(),
+        cursor: z.object({ id: z.string(), creationTime: z.date() }).optional(),
+      })
+    )
+    .query(async ({ input: { limit = 10, userId, cursor }, ctx }) => {
+      return await getInfiniteSpits({
+        limit,
+        ctx,
+        cursor,
+        whereClause: { userId },
+      });
+    }),
+
   infiniteFeed: publicProcedure
     .input(
       z.object({
@@ -43,6 +60,8 @@ export const spitRouter = createTRPCRouter({
       const spit = await ctx.prisma.spit.create({
         data: { content, userId: ctx.session.user.id },
       });
+
+      void ctx.revalidateSSG?.(`/profiles${ctx.session.user.id}`);
 
       return spit;
     }),
