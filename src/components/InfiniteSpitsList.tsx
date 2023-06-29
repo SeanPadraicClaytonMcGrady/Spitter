@@ -101,6 +101,14 @@ function SpitCard({
         };
       };
       trpcUtils.spit.infiniteFeed.setInfiniteData({}, updateData);
+      trpcUtils.spit.infiniteFeed.setInfiniteData(
+        { onlyFollowing: true },
+        updateData
+      );
+      trpcUtils.spit.infiniteProfileFeed.setInfiniteData(
+        { userId: user.id },
+        updateData
+      );
     },
   });
 
