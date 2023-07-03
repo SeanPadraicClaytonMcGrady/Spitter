@@ -9,6 +9,4 @@ Spitter is a Twitter clone that aims to connect people of opposite minds and opi
 
 ## How can I test this?
 
-Coming soon!
-
-# Spitter
+https://spitter.vercel.app/
