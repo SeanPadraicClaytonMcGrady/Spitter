@@ -82,6 +82,23 @@ export const spitRouter = createTRPCRouter({
         return { addedLike: false };
       }
     }),
+
+  toggleDislike: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ input: { id }, ctx }) => {
+      const data = { spitId: id, userId: ctx.session.user.id };
+      const existingDislike = await ctx.prisma.dislike.findUnique({
+        where: { userId_spitId: data },
+      });
+
+      if (existingDislike == null) {
+        await ctx.prisma.dislike.create({ data });
+        return { addedDislike: true };
+      } else {
+        await ctx.prisma.dislike.delete({ where: { userId_spitId: data } });
+        return { addedDislike: false };
+      }
+    }),
 });
 
 async function getInfiniteSpits({
@@ -113,8 +130,10 @@ async function getInfiniteSpits({
       id: true,
       content: true,
       creationTime: true,
-      _count: { select: { likes: true } },
+      _count: { select: { likes: true, dislikes: true } },
       likes:
+        currentUserId == null ? false : { where: { userId: currentUserId } },
+      dislikes:
         currentUserId == null ? false : { where: { userId: currentUserId } },
       user: {
         select: { name: true, id: true, image: true },
@@ -141,8 +160,10 @@ async function getInfiniteSpits({
         content: spit.content,
         creationTime: spit.creationTime,
         likeCount: spit._count.likes,
+        dislikeCount: spit._count.dislikes,
         user: spit.user,
         likedByMe: spit.likes?.length > 0,
+        dislikedByMe: spit.dislikes?.length > 0,
       };
     }),
     nextCursor,

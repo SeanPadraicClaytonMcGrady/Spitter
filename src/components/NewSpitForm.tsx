@@ -45,6 +45,8 @@ function Form() {
           ...newSpit,
           likeCount: 0,
           likedByMe: false,
+          dislikeCount: 0,
+          dislikedByMe: false,
           user: {
             id: session.data.user.id,
             name: session.data.user.name || null,

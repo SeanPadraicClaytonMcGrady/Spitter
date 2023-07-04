@@ -6,6 +6,7 @@ import { VscHeartFilled, VscHeart } from "react-icons/vsc";
 import { IconHoverEffect } from "./IconHoverEffect";
 import { api } from "~/utils/api";
 import { LoadingSpinner } from "./LoadingSpinner";
+import { ImTongue, ImTongue2 } from "react-icons/im";
 
 type Spit = {
   id: string;
@@ -13,6 +14,8 @@ type Spit = {
   creationTime: Date;
   likeCount: number;
   likedByMe: boolean;
+  dislikeCount: number;
+  dislikedByMe: boolean;
   user: { id: string; image: string | null; name: string | null };
 };
 
@@ -69,6 +72,8 @@ function SpitCard({
   creationTime,
   likeCount,
   likedByMe,
+  dislikeCount,
+  dislikedByMe,
 }: Spit) {
   const trpcUtils = api.useContext();
   const toggleLike = api.spit.toggleLike.useMutation({
@@ -116,6 +121,51 @@ function SpitCard({
     toggleLike.mutate({ id });
   }
 
+  const toggleDislike = api.spit.toggleDislike.useMutation({
+    onSuccess: ({ addedDislike }) => {
+      const updateData: Parameters<
+        typeof trpcUtils.spit.infiniteFeed.setInfiniteData
+      >[1] = (oldData) => {
+        if (oldData == null) return;
+
+        const countModifier = addedDislike ? 1 : -1;
+
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page) => {
+            return {
+              ...page,
+              spits: page.spits.map((spit) => {
+                if (spit.id === id) {
+                  return {
+                    ...spit,
+                    dislikeCount: spit.dislikeCount + countModifier,
+                    dislikedByMe: addedDislike,
+                  };
+                }
+
+                return spit;
+              }),
+            };
+          }),
+        };
+      };
+      trpcUtils.spit.infiniteFeed.setInfiniteData({}, updateData);
+      trpcUtils.spit.infiniteFeed.setInfiniteData(
+        { onlyFollowing: true },
+        updateData
+      );
+      trpcUtils.spit.infiniteProfileFeed.setInfiniteData(
+        { userId: user.id },
+        updateData
+      );
+    },
+  });
+
+  function handleToggleDislike() {
+    toggleDislike.mutate({ id });
+  }
+
   return (
     <li className="flex gap-4 border-b px-4 py-4">
       <Link href={`/profiles/${user.id}`}>
@@ -135,12 +185,20 @@ function SpitCard({
           </span>
         </div>
         <p className="whitespace-pre-wrap">{content}</p>
-        <HeartButton
-          onClick={handleToggleLike}
-          isLoading={toggleLike.isLoading}
-          likedByMe={likedByMe}
-          likeCount={likeCount}
-        />
+        <div className="flex-start flex gap-6">
+          <HeartButton
+            onClick={handleToggleLike}
+            isLoading={toggleLike.isLoading}
+            likedByMe={likedByMe}
+            likeCount={likeCount}
+          />
+          <DislikeButton
+            onClick={handleToggleDislike}
+            isLoading={toggleDislike.isLoading}
+            dislikedByMe={dislikedByMe}
+            dislikeCount={dislikeCount}
+          />
+        </div>
       </div>
     </li>
   );
@@ -190,6 +248,54 @@ function HeartButton({
         />
       </IconHoverEffect>
       <span>{likeCount}</span>
+    </button>
+  );
+}
+
+type DislikeButtonProps = {
+  onClick: () => void;
+  isLoading: boolean;
+  dislikedByMe: boolean;
+  dislikeCount: number;
+};
+
+function DislikeButton({
+  isLoading,
+  onClick,
+  dislikedByMe,
+  dislikeCount,
+}: DislikeButtonProps) {
+  const session = useSession();
+  const DislikeIcon = dislikedByMe ? ImTongue2 : ImTongue;
+
+  if (session.status !== "authenticated") {
+    return (
+      <div className="mb-1 mt-1 flex items-center gap-3 self-start text-gray-500">
+        <DislikeIcon />
+        <span>{dislikeCount}</span>
+      </div>
+    );
+  }
+  return (
+    <button
+      disabled={isLoading}
+      onClick={onClick}
+      className={`group -ml-2 flex items-center gap-1 self-start transition-colors duration-200 ${
+        dislikedByMe
+          ? "text-blue-500"
+          : "text-gray-500 hover:text-blue-500 focus-visible:text-blue-500"
+      }`}
+    >
+      <IconHoverEffect red>
+        <DislikeIcon
+          className={`transition-colors duration-200 ${
+            dislikedByMe
+              ? "fill-blue-500"
+              : "fill-gray-500 group-hover:fill-blue-500 group-focus-visible:fill-blue-500"
+          }`}
+        />
+      </IconHoverEffect>
+      <span>{dislikeCount}</span>
     </button>
   );
 }
