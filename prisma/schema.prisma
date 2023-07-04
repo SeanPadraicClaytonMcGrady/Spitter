@@ -18,8 +18,9 @@ model Spit {
     content      String
     creationTime DateTime @default(now())
 
-    user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-    likes Like[]
+    user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    likes    Like[]
+    dislikes Dislike[]
 
     @@unique([creationTime, id])
     @@index([userId])
@@ -35,6 +36,17 @@ model Spit {
 //This gives people flexibility to check for content they agree or disagree with.
 //The neither category will be made of the not-like and not-dislike consequents of the NBA for like & dislike.
 model Like {
+    userId String
+    spitId String
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    spit   Spit   @relation(fields: [spitId], references: [id], onDelete: Cascade)
+
+    @@id([userId, spitId])
+    @@index([userId])
+    @@index([spitId])
+}
+
+model Dislike {
     userId String
     spitId String
     user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -84,6 +96,7 @@ model User {
     sessions      Session[]
     spits         Spit[]
     likes         Like[]
+    dislikes      Dislike[]
 
     //Non-Next Auth
     followers User[] @relation(name: "Followers")
