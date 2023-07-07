@@ -3,7 +3,7 @@ import { fetchTrainingData } from "~/server/api/routers/spit";
 
 describe("fetchTrainingData", () => {
   it("should fetch training data for a given account ID", async () => {
-    const accountId = "252445454090895360";
+    const accountId = "test-account-id";
 
     const spits = await fetchTrainingData(accountId);
 
