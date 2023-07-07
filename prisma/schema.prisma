@@ -26,15 +26,6 @@ model Spit {
     @@index([userId])
 }
 
-//Ideally, we want to use likes & dislikes to provide the foundation for a Naive Bayes Algorithm to provide a filter for spits people
-//agree with, and spits people disagree with.
-
-//Soon, we need to construct a model for dislikes to fulfill a similar function as likes. For NBA, we can have like/not like, dislike/not dislike.
-//We can in theory make 3 more types of content for potential users via the feed tabs tailored for: likes, dislikes, neither.
-
-//That would make a 5 tab system of chronological, following, likes, dislikes, neither. 
-//This gives people flexibility to check for content they agree or disagree with.
-//The neither category will be made of the not-like and not-dislike consequents of the NBA for like & dislike.
 model Like {
     userId String
     spitId String
@@ -58,19 +49,21 @@ model Dislike {
 }
 
 model Account {
-    id                String  @id @default(cuid())
-    userId            String
-    type              String
-    provider          String
-    providerAccountId String
-    refresh_token     String? @db.Text
-    access_token      String? @db.Text
-    expires_at        Int?
-    token_type        String?
-    scope             String?
-    id_token          String? @db.Text
-    session_state     String?
-    user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+    id                  String  @id @default(cuid())
+    userId              String
+    type                String
+    provider            String
+    providerAccountId   String
+    refresh_token       String? @db.Text
+    access_token        String? @db.Text
+    expires_at          Int?
+    token_type          String?
+    scope               String?
+    id_token            String? @db.Text
+    session_state       String?
+    user                User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+    trainedLikeModel    Json?
+    trainedDislikeModel Json?
 
     @@unique([provider, providerAccountId])
     @@index([userId])
