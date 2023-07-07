@@ -7,6 +7,7 @@ import {
   protectedProcedure,
   createTRPCContext,
 } from "~/server/api/trpc";
+import { prisma } from "~/server/db";
 import { Spit } from "~/utils/types";
 
 export const spitRouter = createTRPCRouter({
@@ -118,7 +119,6 @@ async function getInfiniteSpits({
   ctx: inferAsyncReturnType<typeof createTRPCContext>;
 }) {
   const currentUserId = ctx.session?.user.id;
-
   //This data contains all tweets in order by time & sequence.
   //They paginate every 10 tweets by default.
   const data = await ctx.prisma.spit.findMany({
@@ -169,3 +169,32 @@ async function getInfiniteSpits({
     nextCursor,
   };
 }
+
+import { Like } from "@prisma/client";
+
+export async function fetchTrainingData(accountId: string) {
+  const likes: Like[] = await prisma.like.findMany({
+    where: {
+      userId: accountId,
+    },
+  });
+
+  const spitIds = likes.map((like) => like.spitId);
+  const spits = await prisma.spit.findMany({
+    where: {
+      id: {
+        in: spitIds,
+      },
+    },
+  });
+
+  return spits;
+}
+
+// async function mutateTrainingData(spits) {
+//   const trainingData = {
+//     spits.map((spit) => {
+
+//     })
+//   }
+// }

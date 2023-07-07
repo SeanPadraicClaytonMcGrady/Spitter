@@ -15,10 +15,7 @@ const MyApp: AppType<{ session: Session | null }> = ({
     <SessionProvider session={session}>
       <Head>
         <title>Spitter</title>
-        <meta
-          name="description"
-          content="This is Twitter, but with algorithmic discussion."
-        />
+        <meta name="description" content="Twitter, but with more saliva." />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className="container mx-auto flex items-start sm:pr-4">
