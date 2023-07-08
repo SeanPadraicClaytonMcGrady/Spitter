@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Dislike, Prisma } from "@prisma/client";
 import { inferAsyncReturnType } from "@trpc/server";
 import { z } from "zod";
 import {
@@ -9,6 +9,8 @@ import {
 } from "~/server/api/trpc";
 import { prisma } from "~/server/db";
 import { Spit } from "~/utils/types";
+
+import { Like } from "@prisma/client";
 
 export const spitRouter = createTRPCRouter({
   infiniteProfileFeed: publicProcedure
@@ -170,7 +172,12 @@ async function getInfiniteSpits({
   };
 }
 
-import { Like } from "@prisma/client";
+//Below are the functions for the Naive Bayes Algorithm feeds.
+type Data = {
+  content: string;
+  liked: boolean;
+  disliked: boolean;
+}[];
 
 export async function fetchTrainingData(accountId: string) {
   const likes: Like[] = await prisma.like.findMany({
@@ -178,23 +185,52 @@ export async function fetchTrainingData(accountId: string) {
       userId: accountId,
     },
   });
+  const dislikes: Dislike[] = await prisma.dislike.findMany({
+    where: {
+      userId: accountId,
+    },
+  });
 
-  const spitIds = likes.map((like) => like.spitId);
-  const spits = await prisma.spit.findMany({
+  const likedSpitIds = likes.map((like) => like.spitId);
+  const dislikedSpitIds = dislikes.map((dislike) => dislike.spitId);
+  const likedSpits = await prisma.spit.findMany({
     where: {
       id: {
-        in: spitIds,
+        in: likedSpitIds,
       },
     },
   });
 
-  return spits;
+  console.log(likedSpits);
+
+  const dislikedSpits = await prisma.spit.findMany({
+    where: {
+      id: {
+        in: dislikedSpitIds,
+      },
+    },
+  });
+
+  const likedTrainingData: Data = likedSpits.map((spit) => {
+    return {
+      content: spit.content,
+      liked: true,
+      disliked: false,
+    };
+  });
+
+  const dislikedTrainingData: Data = dislikedSpits.map((spit) => {
+    return {
+      content: spit.content,
+      liked: false,
+      disliked: true,
+    };
+  });
+
+  console.log(likedTrainingData, "Liked Training Data");
+  console.log(dislikedTrainingData, "Disliked Training Data");
+
+  const trainingData: Data = likedTrainingData.concat(dislikedTrainingData);
+
+  return trainingData;
 }
-
-// async function mutateTrainingData(spits) {
-//   const trainingData = {
-//     spits.map((spit) => {
-
-//     })
-//   }
-// }
