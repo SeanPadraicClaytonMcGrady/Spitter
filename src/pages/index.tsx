@@ -38,6 +38,7 @@ const Home: NextPage = () => {
         )}
       </header>
       <NewTweetForm />
+      {/* I need to adjust this conditional logic below to reflect a plurality of tabs. */}
       {selectedTab === "Recent" ? <RecentSpits /> : <FollowingSpits />}
     </>
   );

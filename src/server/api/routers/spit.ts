@@ -177,6 +177,7 @@ type Data = {
   content: string;
   liked: boolean;
   disliked: boolean;
+  neutral: boolean;
 }[];
 
 export async function fetchTrainingData(accountId: string) {
@@ -201,13 +202,22 @@ export async function fetchTrainingData(accountId: string) {
     },
   });
 
-  console.log(likedSpits);
+  console.log(likedSpits, "liked spits");
 
-  const dislikedSpits = await prisma.spit.findMany({
+  const notLikedSpits = await prisma.spit.findMany({
     where: {
-      id: {
-        in: dislikedSpitIds,
-      },
+      NOT: [
+        {
+          id: {
+            in: likedSpitIds,
+          },
+        },
+        {
+          id: {
+            in: dislikedSpitIds,
+          },
+        },
+      ],
     },
   });
 
@@ -216,21 +226,22 @@ export async function fetchTrainingData(accountId: string) {
       content: spit.content,
       liked: true,
       disliked: false,
+      neutral: false,
     };
   });
 
-  const dislikedTrainingData: Data = dislikedSpits.map((spit) => {
+  const notLikedTrainingData: Data = notLikedSpits.map((spit) => {
     return {
       content: spit.content,
       liked: false,
-      disliked: true,
+      disliked: false,
+      neutral: true,
     };
   });
 
   console.log(likedTrainingData, "Liked Training Data");
-  console.log(dislikedTrainingData, "Disliked Training Data");
 
-  const trainingData: Data = likedTrainingData.concat(dislikedTrainingData);
+  const trainingData: Data = likedTrainingData.concat(notLikedTrainingData);
 
   return trainingData;
 }
