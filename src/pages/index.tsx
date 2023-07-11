@@ -6,7 +6,7 @@ import { InfiniteSpitList } from "~/components/InfiniteSpitsList";
 import NewTweetForm from "~/components/NewSpitForm";
 import { api } from "~/utils/api";
 
-const TABS = ["Recent", "Following"] as const;
+const TABS = ["Recent", "Following", "Like-Based"] as const;
 
 const Home: NextPage = () => {
   const [selectedTab, setSelectedTab] =
@@ -38,6 +38,7 @@ const Home: NextPage = () => {
         )}
       </header>
       <NewTweetForm />
+      {/* I need to adjust this conditional logic below to reflect a plurality of tabs. */}
       {selectedTab === "Recent" ? <RecentSpits /> : <FollowingSpits />}
     </>
   );

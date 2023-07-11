@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Dislike, Prisma } from "@prisma/client";
 import { inferAsyncReturnType } from "@trpc/server";
 import { z } from "zod";
 import {
@@ -9,6 +9,11 @@ import {
 } from "~/server/api/trpc";
 import { prisma } from "~/server/db";
 import { Spit } from "~/utils/types";
+import { Like } from "@prisma/client";
+import natural, { Tokenizer } from "natural";
+import { WordTokenizer } from "natural";
+import { Stopword } from "stopword";
+import stopword from "stopword";
 
 export const spitRouter = createTRPCRouter({
   infiniteProfileFeed: publicProcedure
@@ -170,7 +175,13 @@ async function getInfiniteSpits({
   };
 }
 
-import { Like } from "@prisma/client";
+//Below are the functions for the Naive Bayes Algorithm feeds.
+type Data = {
+  content: string;
+  liked: boolean;
+  disliked: boolean;
+  neutral: boolean;
+}[];
 
 export async function fetchTrainingData(accountId: string) {
   const likes: Like[] = await prisma.like.findMany({
@@ -178,23 +189,114 @@ export async function fetchTrainingData(accountId: string) {
       userId: accountId,
     },
   });
+  const dislikes: Dislike[] = await prisma.dislike.findMany({
+    where: {
+      userId: accountId,
+    },
+  });
 
-  const spitIds = likes.map((like) => like.spitId);
-  const spits = await prisma.spit.findMany({
+  const likedSpitIds = likes.map((like) => like.spitId);
+  const dislikedSpitIds = dislikes.map((dislike) => dislike.spitId);
+  const likedSpits = await prisma.spit.findMany({
     where: {
       id: {
-        in: spitIds,
+        in: likedSpitIds,
       },
     },
   });
 
-  return spits;
+  console.log(likedSpits, "liked spits");
+
+  const notLikedSpits = await prisma.spit.findMany({
+    where: {
+      NOT: [
+        {
+          id: {
+            in: likedSpitIds,
+          },
+        },
+        {
+          id: {
+            in: dislikedSpitIds,
+          },
+        },
+      ],
+    },
+  });
+
+  const likedTrainingData: Data = likedSpits.map((spit) => {
+    return {
+      content: spit.content,
+      liked: true,
+      disliked: false,
+      neutral: false,
+    };
+  });
+
+  const notLikedTrainingData: Data = notLikedSpits.map((spit) => {
+    return {
+      content: spit.content,
+      liked: false,
+      disliked: false,
+      neutral: true,
+    };
+  });
+
+  console.log(likedTrainingData, "Liked Training Data");
+
+  const trainingData: Data = likedTrainingData.concat(notLikedTrainingData);
+
+  return trainingData;
 }
 
-// async function mutateTrainingData(spits) {
-//   const trainingData = {
-//     spits.map((spit) => {
+export default function preprocessText(
+  data: Data
+): { content: string; liked: boolean; disliked: boolean; neutral: boolean }[] {
+  const preprocessedData = data.map(({ content, liked, disliked, neutral }) => {
+    const tokenizer = new natural.WordTokenizer();
+    const tokens = tokenizer.tokenize(content);
 
-//     })
-//   }
-// }
+    const lowerCaseTokens: string[] =
+      tokens?.map((token) => token.toLocaleLowerCase()) ?? [];
+    const filteredTokens = stopword.removeStopwords(lowerCaseTokens);
+
+    const preprocessedText = filteredTokens.join(" ");
+
+    if (liked) {
+      return {
+        content: preprocessedText,
+        liked: true,
+        disliked: false,
+        neutral: false,
+      };
+    }
+
+    if (disliked) {
+      return {
+        content: preprocessedText,
+        liked: false,
+        disliked: true,
+        neutral: false,
+      };
+    }
+
+    if (neutral) {
+      return {
+        content: preprocessedText,
+        liked: false,
+        disliked: false,
+        neutral: true,
+      };
+    }
+
+    return {
+      content: "",
+      liked: false,
+      disliked: false,
+      neutral: false,
+    };
+  });
+
+  const filteredData = preprocessedData.filter(Boolean);
+  return filteredData;
+}
