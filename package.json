@@ -26,7 +26,7 @@
     "react-dom": "18.2.0",
     "react-icons": "^4.10.1",
     "react-infinite-scroll-component": "^6.1.0",
-    "stopwords": "^0.0.9",
+    "stopword": "^2.0.8",
     "superjson": "1.12.2",
     "zod": "^3.21.4"
   },
