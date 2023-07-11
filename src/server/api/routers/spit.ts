@@ -9,8 +9,11 @@ import {
 } from "~/server/api/trpc";
 import { prisma } from "~/server/db";
 import { Spit } from "~/utils/types";
-
 import { Like } from "@prisma/client";
+import natural, { Tokenizer } from "natural";
+import { WordTokenizer } from "natural";
+import { Stopword } from "stopword";
+import stopword from "stopword";
 
 export const spitRouter = createTRPCRouter({
   infiniteProfileFeed: publicProcedure
@@ -244,4 +247,56 @@ export async function fetchTrainingData(accountId: string) {
   const trainingData: Data = likedTrainingData.concat(notLikedTrainingData);
 
   return trainingData;
+}
+
+export default function preprocessText(
+  data: Data
+): { content: string; liked: boolean; disliked: boolean; neutral: boolean }[] {
+  const preprocessedData = data.map(({ content, liked, disliked, neutral }) => {
+    const tokenizer = new natural.WordTokenizer();
+    const tokens = tokenizer.tokenize(content);
+
+    const lowerCaseTokens: string[] =
+      tokens?.map((token) => token.toLocaleLowerCase()) ?? [];
+    const filteredTokens = stopword.removeStopwords(lowerCaseTokens);
+
+    const preprocessedText = filteredTokens.join(" ");
+
+    if (liked) {
+      return {
+        content: preprocessedText,
+        liked: true,
+        disliked: false,
+        neutral: false,
+      };
+    }
+
+    if (disliked) {
+      return {
+        content: preprocessedText,
+        liked: false,
+        disliked: true,
+        neutral: false,
+      };
+    }
+
+    if (neutral) {
+      return {
+        content: preprocessedText,
+        liked: false,
+        disliked: false,
+        neutral: true,
+      };
+    }
+
+    return {
+      content: "",
+      liked: false,
+      disliked: false,
+      neutral: false,
+    };
+  });
+
+  const filteredData = preprocessedData.filter(Boolean);
+  return filteredData;
 }
