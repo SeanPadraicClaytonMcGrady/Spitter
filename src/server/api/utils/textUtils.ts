@@ -12,7 +12,7 @@ type MessageData = {
 //The purpose of this function is to prepare text for the model.
 //It will receive the content from the fetchTrainingMessageData function in dataUtils.ts.
 //Then it will tokenize the text and remove stop words.
-export default function preprocessText(
+export function preprocessText(
   data: MessageData
 ): { content: string; liked: boolean; disliked: boolean; neutral: boolean }[] {
   const preprocessedData = data.map(({ content, liked, disliked, neutral }) => {
