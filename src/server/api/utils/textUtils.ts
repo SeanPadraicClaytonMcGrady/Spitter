@@ -65,10 +65,8 @@ export function preprocessText(
   return filteredData;
 }
 
+// export default function buildVocabulary(data: MessageData) {
 
-export default function buildVocabulary(data: MessageData) {
-
-    //Here we index the words into word-index pairs. 
-    return void
-}
-
+//     //Here we index the words into word-index pairs.
+//     return void
+// }
