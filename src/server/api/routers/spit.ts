@@ -82,9 +82,11 @@ export const spitRouter = createTRPCRouter({
 
       if (existingLike == null) {
         await ctx.prisma.like.create({ data });
+        //Add here the functions for adding like message to the bag of words. Use id
         return { addedLike: true };
       } else {
         await ctx.prisma.like.delete({ where: { userId_spitId: data } });
+        //Add here the functions for deleting like message from the bag of words. Use id
         return { addedLike: false };
       }
     }),

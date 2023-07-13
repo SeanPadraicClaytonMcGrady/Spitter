@@ -1,72 +1,21 @@
-import natural, { Tokenizer } from "natural";
+import natural, { stopwords } from "natural";
 import stopword from "stopword";
 
-type MessageData = {
+type SpitContent = {
   content: string;
-  liked: boolean;
-  disliked: boolean;
-  neutral: boolean;
-}[];
-
+};
 //We're using the Bag of Words model technique to create a predictive model for like & dislike.
-//The purpose of this function is to prepare text for the model.
-//It will receive the content from the fetchTrainingMessageData function in dataUtils.ts.
+//The purpose of this function is to prepare text.
 //Then it will tokenize the text and remove stop words.
-export function preprocessText(
-  data: MessageData
-): { content: string; liked: boolean; disliked: boolean; neutral: boolean }[] {
-  const preprocessedData = data.map(({ content, liked, disliked, neutral }) => {
-    const tokenizer = new natural.WordTokenizer();
-    const tokens = tokenizer.tokenize(content);
+export function preprocessText(spitContent: SpitContent) {
+  const tokenizer = new natural.WordTokenizer();
+  const tokens = tokenizer.tokenize(spitContent.content);
+  const lowerCaseTokens = tokens?.map((token) => token.toLowerCase()) ?? [];
+  const filteredTokens = lowerCaseTokens?.filter(
+    (token) => !stopword.eng.includes(token)
+  );
 
-    const lowerCaseTokens: string[] =
-      tokens?.map((token) => token.toLocaleLowerCase()) ?? [];
-    const filteredTokens = stopword.removeStopwords(lowerCaseTokens);
+  const bigrams = natural.NGrams.bigrams(filteredTokens);
 
-    const preprocessedText = filteredTokens.join(" ");
-
-    if (liked) {
-      return {
-        content: preprocessedText,
-        liked: true,
-        disliked: false,
-        neutral: false,
-      };
-    }
-
-    if (disliked) {
-      return {
-        content: preprocessedText,
-        liked: false,
-        disliked: true,
-        neutral: false,
-      };
-    }
-
-    if (neutral) {
-      return {
-        content: preprocessedText,
-        liked: false,
-        disliked: false,
-        neutral: true,
-      };
-    }
-
-    return {
-      content: "",
-      liked: false,
-      disliked: false,
-      neutral: false,
-    };
-  });
-
-  const filteredData = preprocessedData.filter(Boolean);
-
-  return filteredData;
+  return bigrams;
 }
-
-// export default function buildVocabulary(data: MessageData) {
-
-//     //Here we index the words into word-index pairs.
-//     return void
-// }
