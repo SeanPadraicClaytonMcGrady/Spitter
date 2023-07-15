@@ -14,6 +14,8 @@ import natural, { Tokenizer } from "natural";
 import { WordTokenizer } from "natural";
 import { Stopword } from "stopword";
 import stopword from "stopword";
+import { fetchMessageTrainingData } from "../utils/dataUtils";
+import { obtainFeatureCounts, preprocessText } from "../utils/textUtils";
 
 export const spitRouter = createTRPCRouter({
   infiniteProfileFeed: publicProcedure
@@ -83,6 +85,16 @@ export const spitRouter = createTRPCRouter({
       if (existingLike == null) {
         await ctx.prisma.like.create({ data });
         //Add here the functions for adding like message to the bag of words. Use id
+        const trainingData = await fetchMessageTrainingData(
+          data.spitId,
+          data.userId
+        );
+        const preprocessedMessage = preprocessText(trainingData, "positive");
+        const featureCounts = obtainFeatureCounts(preprocessedMessage);
+        console.log(trainingData, "training data");
+        console.log(preprocessText(trainingData, "positive"), "preprocessed");
+        console.log(featureCounts, "feature counts");
+
         return { addedLike: true };
       } else {
         await ctx.prisma.like.delete({ where: { userId_spitId: data } });
