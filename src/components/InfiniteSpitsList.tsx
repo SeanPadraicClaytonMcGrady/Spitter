@@ -119,6 +119,10 @@ function SpitCard({
 
   function handleToggleLike() {
     toggleLike.mutate({ id });
+
+    if (dislikedByMe) {
+      toggleDislike.mutate({ id });
+    }
   }
 
   const toggleDislike = api.spit.toggleDislike.useMutation({
@@ -164,6 +168,10 @@ function SpitCard({
 
   function handleToggleDislike() {
     toggleDislike.mutate({ id });
+
+    if (likedByMe) {
+      toggleLike.mutate({ id });
+    }
   }
 
   return (

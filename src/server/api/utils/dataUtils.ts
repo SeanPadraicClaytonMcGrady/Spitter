@@ -1,18 +1,15 @@
 import { prisma } from "~/server/db";
 import { Like, Dislike } from "@prisma/client";
 
-export async function fetchLikedMessageTrainingData(
-  spitId: string,
-  userId: string
-) {
-  const likedMessage = await prisma.like.findUnique({
+export async function fetchMessageTrainingData(spitId: string, userId: string) {
+  const message = await prisma.like.findUnique({
     where: { userId_spitId: { userId, spitId } },
     include: {
       spit: true,
     },
   });
 
-  const spitContent = likedMessage?.spit.content;
+  const spitContent = message?.spit.content;
 
   if (spitContent === undefined) {
     throw new Error(
