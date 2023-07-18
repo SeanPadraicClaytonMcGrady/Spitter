@@ -94,7 +94,7 @@ export const spitRouter = createTRPCRouter({
         console.log(trainingData, "training data");
         console.log(preprocessText(trainingData, "positive"), "preprocessed");
         console.log(featureCounts, "feature counts");
-
+        //Here is where it ends.
         return { addedLike: true };
       } else {
         await ctx.prisma.like.delete({ where: { userId_spitId: data } });

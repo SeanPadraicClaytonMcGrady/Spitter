@@ -1,5 +1,5 @@
 import natural, { stopwords } from "natural";
-import stopword from "stopword";
+import * as sw from "stopword";
 
 type SpitContent = {
   content: string;
@@ -12,8 +12,7 @@ export function preprocessText(spitContent: string, opinion: string) {
   const tokenizer = new natural.WordTokenizer();
   const lowerSpitContent = spitContent.toLowerCase();
   const tokens = tokenizer.tokenize(lowerSpitContent);
-  const filteredTokens =
-    tokens?.filter((token) => !stopword.eng.includes(token)) || [];
+  const filteredTokens = tokens ? sw.removeStopwords(tokens) : [];
 
   const bigrams = natural.NGrams.bigrams(filteredTokens);
 
