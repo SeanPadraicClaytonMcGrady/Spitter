@@ -96,10 +96,11 @@ model User {
 }
 
 model Bigram {
-    id     String @id @default(uuid())
-    userId String
-    bigram String
-    count  Int
+    id            String @id @default(uuid())
+    userId        String
+    bigram        String
+    positiveCount Int
+    negativeCount Int
 
     user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

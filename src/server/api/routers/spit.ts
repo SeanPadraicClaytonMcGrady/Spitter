@@ -85,14 +85,15 @@ export const spitRouter = createTRPCRouter({
       if (existingLike == null) {
         await ctx.prisma.like.create({ data });
         //Add here the functions for adding like message to the bag of words. Use id
-        const trainingData = await fetchMessageTrainingData(
+        const newData = await fetchMessageTrainingData(
           data.spitId,
           data.userId
         );
-        const preprocessedMessage = preprocessText(trainingData, "positive");
+        const preprocessedMessage = preprocessText(newData, "positive");
+
         const featureCounts = obtainFeatureCounts(preprocessedMessage);
-        console.log(trainingData, "training data");
-        console.log(preprocessText(trainingData, "positive"), "preprocessed");
+        console.log(newData, "training data");
+        console.log(preprocessedMessage, "preprocessed");
         console.log(featureCounts, "feature counts");
         //Here is where it ends.
         return { addedLike: true };
