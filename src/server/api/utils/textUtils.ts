@@ -1,19 +1,19 @@
 import natural, { stopwords } from "natural";
-import stopword from "stopword";
+import * as sw from "stopword";
 
 type SpitContent = {
   content: string;
 };
-//We're using the Bag of Words/Bigrams model technique to create a predictive model for like & dislike.
-//The purpose of this function is to prepare text.
-//Then it will tokenize the text and remove stop words.
-//The opinion parameter will be included within the like or dislike button to make this scalable for other rating types.
+
+//Update: We need to use these functions on every like or dislike, and submit that information to the
+//database. Use the bigram table & add a +1 to the like or dislike count.
+//From there, we can do calculations while having a good storage method.
+
 export function preprocessText(spitContent: string, opinion: string) {
   const tokenizer = new natural.WordTokenizer();
   const lowerSpitContent = spitContent.toLowerCase();
   const tokens = tokenizer.tokenize(lowerSpitContent);
-  const filteredTokens =
-    tokens?.filter((token) => !stopword.eng.includes(token)) || [];
+  const filteredTokens = tokens ? sw.removeStopwords(tokens) : [];
 
   const bigrams = natural.NGrams.bigrams(filteredTokens);
 
