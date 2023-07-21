@@ -78,8 +78,8 @@ function FollowingSpits() {
   );
 }
 
-function LikedSpits() {
-  return "";
-}
+// function LikedSpits() {
+//   return "";
+// }
 
 export default Home;
