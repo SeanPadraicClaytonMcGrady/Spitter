@@ -6,7 +6,7 @@ import { InfiniteSpitList } from "~/components/InfiniteSpitsList";
 import NewTweetForm from "~/components/NewSpitForm";
 import { api } from "~/utils/api";
 
-const TABS = ["Recent", "Following", "Like-Based"] as const;
+const TABS = ["Recent", "Following"] as const;
 
 const Home: NextPage = () => {
   const [selectedTab, setSelectedTab] =
@@ -78,8 +78,8 @@ function FollowingSpits() {
   );
 }
 
-function LikedSpits() {
-  return "";
-}
+// function LikedSpits() {
+//   return "";
+// }
 
 export default Home;
