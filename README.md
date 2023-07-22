@@ -14,3 +14,4 @@ https://spitter.vercel.app/
 You need a Discord account to sign on & access key features.
 
 # Spitter
+
