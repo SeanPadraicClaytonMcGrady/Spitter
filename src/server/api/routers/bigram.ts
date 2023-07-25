@@ -1,7 +1,7 @@
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { z } from "zod";
 
-type featureCounts = {
+export type featureCounts = {
   [key: string]: number;
 };
 
@@ -11,6 +11,9 @@ export const bigramRouter = createTRPCRouter({
   addBigrams: protectedProcedure
     .input(z.object({ featureCounts: z.record(z.number()) }))
     .mutation(async ({ input: { featureCounts }, ctx }) => {
+      //Here, we need to transform the Spit into a featureCounts object
+      //Then we proceed to add the featureCounts
+
       const currentUserId = ctx.session?.user.id;
       const bigrams = Object.keys(featureCounts);
       const existingBigrams = await ctx.prisma.bigram.findMany({
