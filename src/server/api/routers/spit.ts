@@ -84,22 +84,11 @@ export const spitRouter = createTRPCRouter({
 
       if (existingLike == null) {
         await ctx.prisma.like.create({ data });
-        //Add here the functions for adding like message to the bag of words. Use id
-        const newData = await fetchMessageTrainingData(
-          data.spitId,
-          data.userId
-        );
-        const preprocessedMessage = preprocessText(newData, "positive");
 
-        const featureCounts = obtainFeatureCounts(preprocessedMessage);
-        console.log(newData, "training data");
-        console.log(preprocessedMessage, "preprocessed");
-        console.log(featureCounts, "feature counts");
-        //Here is where it ends.
         return { addedLike: true };
       } else {
         await ctx.prisma.like.delete({ where: { userId_spitId: data } });
-        //Add here the functions for deleting like message from the bag of words. Use id
+
         return { addedLike: false };
       }
     }),
